@@ -31,7 +31,7 @@ class SimpleSocketClient(EventEmitter):
     def connect(self) -> None:
         self.__thread = Thread(target=self.__threading, args=(self,))
         self.__thread.start()
-        while not client.__connected:
+        while not self.__connected:
             pass
 
     def disconnect(self) -> None:

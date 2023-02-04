@@ -16,7 +16,7 @@ $ pip install simple-socket-client
 Or you can add it as dependency in requirements.txt file of your python application:
 
 ```
-simple-socket-client~=1.1
+simple-socket-client~=1.2
 ```
 
 ## Usage
