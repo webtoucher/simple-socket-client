@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='simple-socket-client',
-      version='1.2',
+      version='1.3',
       url='https://github.com/webtoucher/simple-socket-client',
       license='BSD-3-Clause',
       author='Alexey Kuznetsov',
@@ -21,6 +21,6 @@ setup(name='simple-socket-client',
       long_description=open('README.md').read(),
       long_description_content_type='text/markdown',
       install_requires=[
-          'gevent-eventemitter~=2.1',
+          'event-bus~=1.0.2',
       ],
       zip_safe=False)

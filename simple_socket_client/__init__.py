@@ -9,7 +9,7 @@ import queue
 import socket
 
 from datetime import datetime
-from eventemitter import EventEmitter
+from event_bus import EventBus
 from threading import Thread
 from typing import Optional
 
@@ -18,7 +18,7 @@ class SimpleSocketClientException(socket.error):
     pass
 
 
-class SimpleSocketClient(EventEmitter):
+class SimpleSocketClient(EventBus):
     def __init__(self, host: str, port: int):
         self.__host = host
         self.__port = port
