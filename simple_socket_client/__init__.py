@@ -20,6 +20,7 @@ class SimpleSocketClientException(socket.error):
 
 class SimpleSocketClient(EventBus):
     def __init__(self, host: str, port: int):
+        super().__init__()
         self.__host = host
         self.__port = port
         self.__socket = None
