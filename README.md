@@ -16,7 +16,7 @@ $ pip install simple-socket-client
 Or you can add it as dependency in requirements.txt file of your python application:
 
 ```
-simple-socket-client~=1.4
+simple-socket-client~=1.5
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ simple-socket-client~=1.4
 from simple_socket_client import SimpleSocketClient
 
 client = SimpleSocketClient('192.168.0.2', 6666)
-client.connect()
+client.connect(timeout=10)
 
 client.send('Test'.encode()) # if you don't need an answer
 answer = client.ask('Hi!'.encode())

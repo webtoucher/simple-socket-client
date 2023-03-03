@@ -25,52 +25,64 @@ class SimpleSocketClient(EventBus):
         self.__port = port
         self.__socket = None
         self.__thread = None
+        self.__thread_err = None
         self.__outgoing_messages = None
         self.__connected = False
         self.__keep_answer = False
 
-    def connect(self) -> None:
-        self.__thread = Thread(target=self.__threading, args=(self,))
+    def connect(self, timeout=None) -> None:
+        self.__thread_err = None
+        self.__thread = Thread(target=self.__threading, args=(self, timeout))
         self.__thread.start()
         while not self.__connected:
-            pass
+            if self.__thread_err:
+                raise self.__thread_err
 
     def disconnect(self) -> None:
         self.__connected = False
 
     @staticmethod
-    def __threading(client):
-        client.__incoming_messages = queue.Queue()
-        client.__outgoing_messages = queue.Queue()
-        client.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if client.__socket.fileno() < 0:
-            raise SimpleSocketClientException('Error with creating sockets')
-        client.__socket.connect((client.__host, client.__port))
-        client.__connected = True
-        client.emit('connect', (client.__host, client.__port))
-        while client.__connected:
+    def __threading(client, timeout):
+        try:
+            client.__incoming_messages = queue.Queue()
+            client.__outgoing_messages = queue.Queue()
+            client.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if client.__socket.fileno() < 0:
+                raise SimpleSocketClientException('Problem with creating sockets')
+            client.__socket.settimeout(timeout)
             try:
-                if client.__socket.fileno() > 0:
-                    message = client.__outgoing_messages.get_nowait()
-                else:
-                    client.disconnect()
+                client.__socket.connect((client.__host, client.__port))
+            except TimeoutError as err:
+                raise SimpleSocketClientException('Connection timed out') from err
+            client.__socket.settimeout(None)
+            client.__connected = True
+            client.emit('connect', (client.__host, client.__port))
+            while client.__connected:
+                try:
+                    if client.__socket.fileno() > 0:
+                        message = client.__outgoing_messages.get_nowait()
+                    else:
+                        client.disconnect()
+                        continue
+                except queue.Empty:
                     continue
-            except queue.Empty:
-                continue
 
-            try:
-                if message:
-                    client.__socket.sendall(message)
-                    if client.__keep_answer:
-                        client.__receive_message()
-            except ConnectionResetError:
-                client.disconnect()
+                try:
+                    if message:
+                        client.__socket.sendall(message)
+                        if client.__keep_answer:
+                            client.__receive_message()
+                except ConnectionResetError:
+                    client.disconnect()
+        except SimpleSocketClientException as err:
+            client.__thread_err = err
 
         client.emit('disconnect', (client.__host, client.__port))
         client.__incoming_messages = None
         client.__outgoing_messages = None
-        client.__socket.close()
-        client.__socket = None
+        if client.__socket:
+            client.__socket.close()
+            client.__socket = None
 
     def send(self, message: bytes) -> None:
         if not self.__connected:
